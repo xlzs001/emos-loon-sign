@@ -1,0 +1,33 @@
+name: emos 自动签到
+
+on:
+  schedule:
+    # 每天 UTC 00:05 = 北京时间 08:05
+    - cron: "5 0 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: emos-sign
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 执行签到
+        env:
+          EMOS_TOKENS: ${{ secrets.EMOS_TOKENS }}
+        run: python3 python/emos_sign.py
+
+      # 失败也留痕，方便回溯是哪天没签上
+      - name: 记录结果
+        if: always()
+        run: echo "run at $(date -u '+%Y-%m-%d %H:%M:%S UTC') / status=${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,64 @@
+{
+  "id": "emos.sign.sub",
+  "name": "emos 自动签到",
+  "description": "Token 可视化填写 + 每天定时签到。配合 Loon 插件或 GitHub Actions 使用。",
+  "author": "@xlzs001",
+  "icon": "https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/assets/icon.png",
+  "repo": "https://github.com/xlzs001/emos-loon-sign",
+  "apps": [
+    {
+      "id": "emos",
+      "name": "emos 签到",
+      "keys": [
+        "emos_auto_sign",
+        "emos_tokens",
+        "emos_time",
+        "emos_content"
+      ],
+      "settings": [
+        {
+          "id": "emos_auto_sign",
+          "name": "自动签到",
+          "val": true,
+          "type": "boolean",
+          "desc": "关闭后定时任务不再请求接口，手动「立即签到」仍可用"
+        },
+        {
+          "id": "emos_tokens",
+          "name": "Token 密钥",
+          "val": "",
+          "type": "textarea",
+          "autoGrow": true,
+          "rows": 6,
+          "desc": "每行一个账号，格式「备注,11_xxx」或只写 token。多个账号换行分隔。密钥在 emos.best 首页点左上「欢迎」查看"
+        },
+        {
+          "id": "emos_time",
+          "name": "签到时间",
+          "val": "08:05",
+          "type": "text",
+          "desc": "24 小时制 HH:mm。过点还没签会自动补签，不会漏"
+        },
+        {
+          "id": "emos_content",
+          "name": "签到留言",
+          "val": "",
+          "type": "text",
+          "desc": "留空则每次从内置短语里随机一句（签到接口的 content 参数）"
+        }
+      ],
+      "author": "@xlzs001",
+      "repo": "https://github.com/xlzs001/emos-loon-sign",
+      "icons": [
+        "https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/assets/icon.png",
+        "https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/assets/icon.png"
+      ],
+      "descs_html": [
+        "这里填的 Token 和 Loon 插件、脚本读的是同一份数据（emos <code>emos_tokens</code>），改哪边都生效。",
+        "想自动抓取 Token：开着 Loon 打开一次 emos.best 登录即可，无需手抄。",
+        "签到时间只是「最早什么时候开始签」，脚本每小时复查一次，晚开手机也会补签。"
+      ]
+    }
+  ],
+  "task": []
+}

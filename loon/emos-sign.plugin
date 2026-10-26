@@ -1,0 +1,49 @@
+#!name = emos 自动签到
+#!desc = 在插件设置里直接填 Token（可视化），自动抓取登录密钥，每天定时签到领萝卜；支持多账号。
+#!author = xlzs001
+#!homepage = https://emos.dpdns.org
+#!icon = https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/assets/icon.png
+#!system = iOS,iPadOS
+#!loon_version = 3.5.1(983)
+#!date = 2026-10-26
+#!tag = 签到,工具
+#!type = normal
+
+# ─────────────────────────────────────────────────────────────
+# 用法：导入插件 → 插件设置里填 Token（多个用逗号分隔）→ 完成
+# 签到时间改 time；不想跑就把 enabled 关掉。
+# cron 每小时跑一次，脚本自己判断「到点没有 + 今天签过没有」，
+# 所以就算 08:05 手机没联网，晚点开也会自动补签。
+# ─────────────────────────────────────────────────────────────
+
+[Argument]
+tokens = input,"",type=string,tag=Token 密钥,desc=形如 11_AkJO2UdOKinqmKOU，多个账号用逗号分隔；留空则用自动抓取/BoxJS 里存的
+remark = input,"主号",type=string,tag=账号备注,desc=只影响通知里的显示名
+time = input,"08:05",type=string,tag=签到时间,desc=24 小时制 HH:mm，过点未签会自动补签
+content = input,"",type=string,tag=签到留言,desc=留空则每次随机一句
+enabled = switch,true,type=boolean,tag=启用自动签到
+
+[Rule]
+
+[Script]
+
+# ① 抓密钥：开着 Loon 打开一次 emos.best 并登录，Bearer token 自动入库（需 MitM）
+request if ${url} ~= /^https?:\/\/(api\.)?emos\.best\/api\// then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-token-capture.js") with tag="emos抓密钥", timeout=30
+
+# ② 密钥被重置时，用响应里的新 key 自动替换旧的
+response if ${url} ~= /^https?:\/\/(api\.)?emos\.best\/api\/user\/resetToken/ then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-token-capture.js") with tag="emos同步密钥", timeout=30, requires_body=true
+
+# ③ 每小时 :05 检查一次，到点且没签才真正发请求
+cron "5 * * * *" then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-sign.js", {${tokens}, ${remark}, ${time}, ${content}, ${enabled}}) with tag="emos定时签到", timeout=300, enable=${enabled}
+
+# ④ 手动：点一下立刻签到（不带 time 参数 = 跳过时间门禁，仍用上面填的 Token）
+generic then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-sign.js", {${tokens}, ${remark}, ${content}, ${enabled}}) with tag="emos立即签到", timeout=300
+
+# ⑤ 手动：把上面填的 Token 存到本地，之后即使清空设置也还在
+generic then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-config.js", {${tokens}, ${remark}}) with tag="emos保存Token", timeout=30
+
+# ⑥ 手动：查看已保存的账号
+generic then script("https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-config.js", "list") with tag="emos查看账号", timeout=30
+
+[MitM]
+hostname = %APPEND% emos.best, api.emos.best

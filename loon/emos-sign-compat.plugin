@@ -1,0 +1,37 @@
+#!name = emos 自动签到（兼容版）
+#!desc = 给 Loon 3.5.1(983) 以下的旧版本用：没有可视化参数面板，Token 靠自动抓取或 BoxJS 面板填写。
+#!author = xlzs001
+#!homepage = https://emos.dpdns.org
+#!icon = https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/assets/icon.png
+#!system = iOS,iPadOS
+#!date = 2026-10-26
+#!tag = 签到,工具
+#!type = normal
+
+# 旧版 Script 语法：script-path= 而不是 script(...)。
+# 想要可视化填 Token，请用 emos-sign.plugin（需要 Loon ≥ 3.5.1(983)）。
+
+[Rule]
+
+[Script]
+
+# ① 抓密钥（需开启 MitM 并信任证书）
+http-request ^https?:\/\/(api\.)?emos\.best\/api\/ script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-token-capture.js, tag=emos抓密钥, timeout=30, enable=true
+
+# ② 密钥重置时自动同步
+http-response ^https?:\/\/(api\.)?emos\.best\/api\/user\/resetToken script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-token-capture.js, tag=emos同步密钥, requires-body=true, timeout=30, enable=true
+
+# ③ 每天 08:05 签到（要改时间就改这里的 5 8）
+cron "5 8 * * *" script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-sign.js, tag=emos自动签到, timeout=300, enable=true
+
+# ④ 手动：立即签到
+generic script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-sign.js, tag=emos立即签到, timeout=300, enable=true
+
+# ⑤ 手动：查看账号
+generic script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-config.js, tag=emos查看账号, timeout=30, argument="list", enable=true
+
+# ⑥ 手动：填 Token（把 argument 改成 token=11_xxx&remark=主号 后运行一次）
+generic script-path=https://raw.githubusercontent.com/xlzs001/emos-loon-sign/main/scripts/emos-config.js, tag=emos填Token, timeout=30, argument="list", enable=true
+
+[MitM]
+hostname = %APPEND% emos.best, api.emos.best

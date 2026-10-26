@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  loon-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 校验脚本语法
+        run: |
+          for f in scripts/*.js tools/test-local.js; do node --check "$f"; done
+      - name: 跑模拟 Loon 运行时用例
+        run: node tools/test-local.js
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 校验语法
+        run: python3 -m py_compile python/emos_sign.py
