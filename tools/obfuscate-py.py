@@ -126,6 +126,37 @@ def precollect(tree):
     return ob
 
 
+
+# ── 字符串常量编码（可选） ───────────────────────────────────────
+import base64 as _b64
+
+# 用双下划线前缀，确保和混淆器生成的 _a/_b/_s 这类短名不撞车
+B64 = "__emos_b64"
+DECODER = "__emos_s"
+
+
+def _encode_strings(tree):
+    """把长度 >= 4 的字符串常量换成 _s('...') 运行时解码，避免接口路径、提示语以明文出现"""
+    class Enc(ast.NodeTransformer):
+        def visit_Constant(self, node):
+            if isinstance(node.value, str) and len(node.value) >= 4:
+                raw = _b64.b64encode(node.value.encode("utf-8")).decode("ascii")
+                return ast.Call(
+                    func=ast.Name(id=DECODER, ctx=ast.Load()),
+                    args=[ast.Constant(value=raw)],
+                    keywords=[],
+                )
+            return node
+
+    tree = Enc().visit(tree)
+    prelude = ast.parse(
+        "import base64 as %(b)s\n\ndef %(d)s(x):\n    return %(b)s.b64decode(x).decode('utf-8')\n"
+        % {"b": B64, "d": DECODER}
+    )
+    tree.body = prelude.body + tree.body
+    return ast.fix_missing_locations(tree)
+
+
 def main():
     if not os.path.exists(SRC):
         print("找不到源码：" + SRC, file=sys.stderr)
@@ -165,6 +196,9 @@ def main():
     # 去掉模块级文档字符串
     if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant) and isinstance(tree.body[0].value.value, str):
         tree.body = tree.body[1:]
+
+    if "--plain-strings" not in sys.argv:
+        tree = _encode_strings(tree)
 
     out = ast.unparse(tree)
 

@@ -28,3 +28,5 @@ jobs:
           python-version: "3.12"
       - name: 校验语法
         run: python3 -m py_compile python/emos_sign.py
+      - name: 跑 Python 用例（mock 网络）
+        run: python3 tools/test-py.py

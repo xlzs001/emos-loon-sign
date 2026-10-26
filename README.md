@@ -141,7 +141,8 @@ emos-loon-sign/
 改脚本前先跑自检（默认测的就是 `scripts/` 里的混淆产物，不是源码）：
 
 ```bash
-node tools/test-local.js     # 39/39
+node tools/test-local.js       # 39/39（JS，模拟 Loon 运行时）
+python3 tools/test-py.py       # 8/8（Python，mock 网络）
 ```
 
 ---
@@ -304,7 +305,8 @@ Loon 导入插件、脚本下载都会失败 —— 这是 GitHub 的机制，�
 # 需要一次：npm i -g javascript-obfuscator   或装到任意 node_modules 里
 NODE_PATH=/path/to/node_modules node tools/obfuscate.js --preset=A
 python3 tools/obfuscate-py.py
-node tools/test-local.js        # 39/39 才算通过
+node tools/test-local.js        # 39/39
+python3 tools/test-py.py        # 8/8 才算通过
 ```
 
 混淆参数刻意避开了在 Loon 的 JavaScriptCore 里容易翻车的选项：`selfDefending`、`debugProtection`
